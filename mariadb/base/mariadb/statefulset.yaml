@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb # Nombre más descriptivo
+  namespace: mysql-ns
+spec:
+  serviceName: mariadb-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb # ¡Actualizado para coincidir con el Service!
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:11.7 # Versión LTS recomendada (o usa 'latest')
+        env:
+          - name: MARIADB_ROOT_PASSWORD # Variable específica de MariaDB
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: root-password
+          - name: MARIADB_USER
+            value: migbert  # Usuario de la base de datos
+          - name: MARIADB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: user-password
+          - name: MARIADB_DATABASE
+            value: appdb
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mariadb-data # Nombre más claro
+          mountPath: /var/lib/mysql # ¡La misma ruta que en MySQL!
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path # Explicitamos tu StorageClass
+        resources:
+          requests:
+            storage: 2Gi

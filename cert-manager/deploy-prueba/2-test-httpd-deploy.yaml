@@ -1,0 +1,73 @@
+# Deploy de una simple imagen de httpd para probar los certificados
+# crear el namespace para aislar este deploy
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: httpd-prueba
+
+# Deploy de la imagen
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-web
+  namespace: httpd-prueba # Namespace diferente al Ingress Controller
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: simple-web # Label única para tu app
+  template:
+    metadata:
+      labels:
+        app: simple-web
+    spec:
+      containers:
+        - name: simple-web
+          image: httpd:alpine
+          ports:
+            - containerPort: 80
+
+# Service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-web-service
+  namespace: httpd-prueba
+spec:
+  selector:
+    app: simple-web # Debe coincidir con el Deployment
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+# Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simple-web-ingress
+  namespace: httpd-prueba
+#  annotations:
+#    cert-manager.io/cluster-issuer: letsencrypt-prod # Cert-Manager
+#    nginx.ingress.kubernetes.io/force-ssl-redirect: "true" # HTTP → HTTPS
+spec:
+  ingressClassName: nginx # Usa el Ingress Controller de NGINX
+  tls:
+    - hosts:
+        - local.migbertweb.xyz
+      secretName: httpd-prod-tls # Certificado gestionado
+  rules:
+    - host: local.migbertweb.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: simple-web-service # Apunta al Service de tu app
+                port:
+                  number: 80

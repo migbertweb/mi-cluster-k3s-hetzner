@@ -1,0 +1,77 @@
+# --- Prometheus Config ---
+prometheus:
+  prometheusSpec:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 300m
+        memory: 512Mi
+    retention: 24h # Menos almacenamiento
+    retentionSize: "500MB"  # Límite de espacio en disco
+    replicaCount: 1 # Solo 1 réplica
+
+# --- Alertmanager (deshabilitado) ---
+alertmanager:
+  enabled: false
+
+# --- Pushgateway (deshabilitado) ---
+pushgateway:
+  enabled: false
+
+# --- Node Exporter (HABILITADO para métricas de nodos) ---
+nodeExporter:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# --- kube-state-metrics (HABILITADO para métricas del cluster) ---
+kube-state-metrics:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# --- Grafana (HABILITADO con dashboards básicos) ---
+grafana:
+  enabled: true
+  adminUser:
+    existingSecret: grafana-auth
+    existingSecretKey: admin-user
+  adminPassword: 
+    existingSecret: grafana-auth
+    existingSecretKey: admin-password
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-production"
+    hosts:
+      - metrics.migbertweb.xyz
+    tls:
+      - hosts:
+          - metrics.migbertweb.xyz
+        secretName: grafana-tls
+  sidecar:
+    dashboards:
+      enabled: true
+  plugins:
+   - grafana-kubernetes-app # Plugin para dashboards de Kubernetes

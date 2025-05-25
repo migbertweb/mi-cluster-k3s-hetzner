@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/mariadb
+  - ../../base/phpmyadmin
+patches:
+  # Patch para StatefulSet (réplicas)
+  - target:
+      kind: StatefulSet
+      name: mariadb
+    path: mariadb/replicas-patch.yaml
+  
+  # Patch para Service NodePort
+  - target:
+      kind: Service
+      name: mariadb-nodeport
+    path: mariadb/nodeport-patch.yaml
+  
+  # Patch para Ingress
+  - target:
+      kind: Ingress
+      name: phpmyadmin-ingress
+    path: phpmyadmin/ingress-patch.yaml

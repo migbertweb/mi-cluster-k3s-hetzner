@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: migbertweb-xyz
+  namespace: default
+spec:
+  secretName: migbertweb-xyz-staging-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  commonName: "*.migbertweb.xyz"
+  dnsNames:
+  - "migbertweb.xyz"
+  - "*.migbertweb.xyz"

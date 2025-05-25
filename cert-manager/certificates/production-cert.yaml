@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: migbertweb-xyz-prod
+  namespace: default
+spec:
+  secretName: migbertweb-xyz-prod-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  commonName: "*.migbertweb.xyz"
+  dnsNames:
+  - "migbertweb.xyz"
+  - "*.migbertweb.xyz"

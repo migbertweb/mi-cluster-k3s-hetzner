@@ -1,0 +1,35 @@
+# crear el namespace para aislar este deploy
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: httpd-prueba
+# certificado de produccion para el namespace httpd-prueba
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: httpd-test-prod
+  namespace: httpd-prueba
+spec:
+  secretName: httpd-prod-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+  - "migbertweb.xyz"
+  - "*.migbertweb.xyz"
+# certificado de pruebas staging
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: httpd-test-staging
+  namespace: httpd-prueba
+spec:
+  secretName: httpd-staging-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.migbertweb.xyz"

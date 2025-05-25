@@ -1,0 +1,46 @@
+controller:
+  kind: DaemonSet
+
+  service:
+    enabled: true
+    external:
+      enabled: true
+    annotations:
+      load-balancer.hetzner.cloud/name: "mik3s-loadbalancer"
+      load-balancer.hetzner.cloud/location: "nbg1"
+      load-balancer.hetzner.cloud/use-private-ip: "true"
+      load-balancer.hetzner.cloud/uses-proxyprotocol: "true"
+      load-balancer.hetzner.cloud/hostname: "migbertweb.xyz"  # Cambia esto por tu dominio
+
+    externalTrafficPolicy: Local
+    type: LoadBalancer
+    ports:
+      http: 80
+      https: 443
+
+  hostNetwork: false  # Si usas esto en modo bare-metal, puedes poner true
+  dnsPolicy: ClusterFirstWithHostNet  # Solo si hostNetwork: true
+
+  ingressClassResource:
+    name: nginx
+    enabled: true
+    default: true
+
+  config:
+    use-proxy-protocol: "true"
+    real-ip-header: "proxy_protocol"
+    set-real-ip-from: "0.0.0.0/0"
+    proxy-real-ip-cidr: "0.0.0.0/0"
+
+  resources:
+      limits:
+        cpu: 300m
+        memory: 150Mi
+      requests:
+        cpu: 100m
+        memory: 90Mi
+        
+  admissionWebhooks:
+    enabled: true
+    patch:
+      enabled: true

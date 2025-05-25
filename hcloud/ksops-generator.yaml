@@ -1,0 +1,7 @@
+# ksops-generator.yaml
+apiVersion: viaduct.ai/v1
+kind: ksops
+metadata:
+  name: ksops-generator
+files:
+  - hcloud-secret.enc.yaml  # Archivo encriptado
