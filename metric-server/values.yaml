@@ -1,0 +1,31 @@
+# metrics-server-values.yaml
+
+replicas: 1  # Para clusters pequeños, 1 réplica es suficiente
+
+args:
+  - --kubelet-insecure-tls
+  - --kubelet-preferred-address-types=InternalIP
+  - --metric-resolution=60s  # Reduce la frecuencia de scraping
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 200Mi
+  requests:
+    cpu: 50m
+    memory: 100Mi
+
+# nodeSelector:
+#  kubernetes.io/arch: amd64  # Puedes seleccionar nodos específicos
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+priorityClassName: system-cluster-critical
+
+image:
+  repository: registry.k8s.io/metrics-server/metrics-server
+  tag: v0.7.0
+  pullPolicy: IfNotPresent

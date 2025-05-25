@@ -74,4 +74,4 @@ grafana:
     dashboards:
       enabled: true
   plugins:
-   - grafana-kubernetes-app # Plugin para dashboards de Kubernetes
+   - grafana-kubernetes-app # Plugin para dashboards de Kubernetes 
