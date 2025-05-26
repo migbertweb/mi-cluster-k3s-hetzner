@@ -62,20 +62,6 @@ grafana:
 ingress:
   enabled: false  # Deshabilitamos el Ingress tradicional de Nginx
 
-# Configuración para Traefik IngressRoute
-# ingressRoute:
-#   enabled: true
-#   entryPoints: 
-#     - websecure
-#   tls:
-#     secretName: grafana-tls  # Nombre del Secret donde cert-manager guarda el certificado
-#   routes:
-#     - match: Host(`metrics.migbertweb.xyz`)
-#       kind: Rule
-#       services:
-#         - name: grafana
-#           port: 80
-
 sidecar:
   dashboards:
     enabled: true
