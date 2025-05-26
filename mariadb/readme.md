@@ -15,7 +15,7 @@ Pestaña "Services" → agrega un nuevo servicio:
 ```yaml
 Protocol: TCP
 Public Port: 3306
-Target Port: 32306
+Target Port: 32307
 ```
 
 **para crear el usuario y la base de datos ejecuta:**

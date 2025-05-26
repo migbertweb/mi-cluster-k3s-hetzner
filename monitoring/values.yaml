@@ -1,6 +1,7 @@
 # --- Prometheus Config ---
 prometheus:
   prometheusSpec:
+    maximumStartupDurationSeconds: 300  # Recommended: 300s (5 mins)
     resources:
       requests:
         cpu: 100m
@@ -45,12 +46,11 @@ kube-state-metrics:
 # --- Grafana (HABILITADO con dashboards básicos) ---
 grafana:
   enabled: true
-  adminUser:
+  admin:
+  ## Name of the secret. Can be templated.
     existingSecret: grafana-auth
-    existingSecretKey: admin-user
-  adminPassword: 
-    existingSecret: grafana-auth
-    existingSecretKey: admin-password
+    userKey: admin-user
+    passwordKey: admin-password
   resources:
     requests:
       cpu: 100m
@@ -59,19 +59,26 @@ grafana:
       cpu: 300m
       memory: 256Mi
 
-  ingress:
+ingress:
+  enabled: false  # Deshabilitamos el Ingress tradicional de Nginx
+
+# Configuración para Traefik IngressRoute
+# ingressRoute:
+#   enabled: true
+#   entryPoints: 
+#     - websecure
+#   tls:
+#     secretName: grafana-tls  # Nombre del Secret donde cert-manager guarda el certificado
+#   routes:
+#     - match: Host(`metrics.migbertweb.xyz`)
+#       kind: Rule
+#       services:
+#         - name: grafana
+#           port: 80
+
+sidecar:
+  dashboards:
     enabled: true
-    ingressClassName: nginx
-    annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-production"
-    hosts:
-      - metrics.migbertweb.xyz
-    tls:
-      - hosts:
-          - metrics.migbertweb.xyz
-        secretName: grafana-tls
-  sidecar:
-    dashboards:
-      enabled: true
-  plugins:
-   - grafana-kubernetes-app # Plugin para dashboards de Kubernetes 
+
+plugins:
+  - grafana-kubernetes-app
