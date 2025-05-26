@@ -6,4 +6,4 @@ resources:
   - grafana-ingressroute.yaml
 
 generators:
-  - ksops-generator.yaml
+  - secrets/ksops-generator.yaml

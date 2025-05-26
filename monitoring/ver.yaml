@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-auth
+  namespace: monitoring
+stringData:
+  admin-password: gpiro2178
+  admin-user: migbert
+type: Opaque
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-tls
+  namespace: monitoring
+spec:
+  dnsNames:
+  - metrics.migbertweb.xyz
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-production
+  secretName: grafana-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - kind: Rule
+    match: Host(`metrics.migbertweb.xyz`)
+    services:
+    - name: monitoring-grafana
+      port: 80
+  tls:
+    secretName: grafana-tls
