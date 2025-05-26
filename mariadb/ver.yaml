@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mysql-ns
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+  namespace: mysql-ns
+stringData:
+  root-password: gpiro2178
+  user-password: gpiro2178
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-nodeport
+  namespace: mysql-ns
+spec:
+  ports:
+  - name: mysql
+    nodePort: 8085
+    port: 3306
+    targetPort: 3306
+  selector:
+    app: mariadb
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+  namespace: mysql-ns
+spec:
+  clusterIP: None
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: mariadb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+  namespace: mysql-ns
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: phpmyadmin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+  namespace: mysql-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+      - env:
+        - name: PMA_HOST
+          value: mariadb-service.mysql-ns.svc.cluster.local
+        - name: PMA_PORT
+          value: "3306"
+        image: phpmyadmin:latest
+        name: phpmyadmin
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: mysql-ns
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mariadb
+  serviceName: mariadb-service
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: root-password
+              name: mysql-secret
+        - name: MARIADB_USER
+          value: migbert
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: user-password
+              name: mysql-secret
+        - name: MARIADB_DATABASE
+          value: appdb
+        image: mariadb:11.7
+        name: mariadb
+        ports:
+        - containerPort: 3306
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mariadb-data
+  volumeClaimTemplates:
+  - metadata:
+      name: mariadb-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+      storageClassName: local-path
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressRoute
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+  name: phpmyadmin-ingress
+  namespace: mysql-ns
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - kind: Rule
+    match: Host(`mysql.migbertweb.xyz`)
+    services:
+    - name: phpmyadmin-service
+      port: 80
+  tls:
+    secretName: phpmyadmin-tls

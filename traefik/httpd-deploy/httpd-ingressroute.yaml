@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: httpd-ingressroute
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`test.migbertweb.xyz`)
+      kind: Rule
+      services:
+        - name: httpd-service
+          port: 80
+  tls:
+    secretName: httpd-tls

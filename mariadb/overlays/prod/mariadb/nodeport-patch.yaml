@@ -7,4 +7,4 @@ spec:
     - name: mysql
       port: 3306
       targetPort: 3306
-      nodePort: 8085  # Cambiado para prod
+      nodePort: 32307  # Cambiado para prod

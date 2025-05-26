@@ -11,4 +11,4 @@ spec:
     - name: mysql
       port: 3306
       targetPort: 3306
-      nodePort: 32306  # Puedes elegir un puerto entre 30000-32767
+      nodePort: 32307  # Puedes elegir un puerto entre 30000-32767

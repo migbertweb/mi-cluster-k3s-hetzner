@@ -1,0 +1,28 @@
+
+service:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    load-balancer.hetzner.cloud/name: "traefik-lb"
+    load-balancer.hetzner.cloud/use-private-ip: "true"
+    load-balancer.hetzner.cloud/disable-private-ingress: "true"
+    load-balancer.hetzner.cloud/location: "nbg1"
+    load-balancer.hetzner.cloud/protocol: "tcp"
+    load-balancer.hetzner.cloud/health-check: "true"
+
+      
+ingressRoute:
+  dashboard:
+    enabled: false
+
+# Recursos
+resources:
+  requests:
+    cpu: "300m"
+    memory: "150Mi"
+  limits:
+    cpu: "500m"
+    memory: "400Mi"
+
+rbac:
+  enabled: true
