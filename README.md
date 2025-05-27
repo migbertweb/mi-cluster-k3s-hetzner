@@ -133,13 +133,13 @@ kubectl describe node worker-node-0 | grep "ProviderID"
 
 **Estara disponible para utilizar en los pvc con el storageclass:nfs-dynamic**
 
+#### En la carpeta infrastructure/storage
+
 ```bash
 helm install nfs-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --namespace nfs-provisioner --create-namespace \
-    --set nfs.server="10.0.1.1" \
-    --set nfs.path="/mnt/nfs_share" \
-    --set storageClass.name="nfs-dynamic" \
-    --set storageClass.accessModes="ReadWriteMany"
+  --namespace nfs-provisioner \
+  --create-namespace \
+  --values nfs-provisioner-values.yaml
 ```
 
 ***

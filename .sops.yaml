@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: .*secret.*\.yaml    # Aplica a archivos con "secret" en el nombre
+    age: age12t53xgmu88ye80jtnne6gcfgeytyvvsk6nyetep3xcdw0zthj5msr3dz2l   # Tu clave pública AGE (copiada de age.key)

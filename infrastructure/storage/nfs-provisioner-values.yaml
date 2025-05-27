@@ -1,0 +1,21 @@
+# nfs-provisioner-values.yaml
+nfs:
+  server: "10.0.1.1"           # IP o hostname de tu servidor NFS
+  path: "/mnt/nfs_share"       # Ruta exportada en el servidor NFS
+  mountOptions:                # Opciones de montaje (opcional)
+    - hard
+    - nfsvers=4.1
+
+storageClass:
+  name: "nfs-dynamic"          # Nombre de la StorageClass
+  accessModes: "ReadWriteMany" # Modo de acceso
+  reclaimPolicy: "Delete"      # Política de retención (Delete/Retain)
+  defaultClass: true           # Si es la StorageClass por defecto
+  archiveOnDelete: false       # Archivar datos al borrar PVC (opcional)
+
+# Configuración adicional del Provisioner (opcional)
+# provisionerName: "cluster.local/nfs-subdir-external-provisioner"
+# image:
+#   repository: "k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner"
+#   tag: "v4.0.2"
+#   pullPolicy: "IfNotPresent"
