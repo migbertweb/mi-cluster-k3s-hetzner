@@ -1,39 +1,122 @@
-# Enable Kustomize Alpha Plugins via Argo CD ConfigMap, required for ksops
+## CONFIGURACIÓN PRINCIPAL ##
+# Habilita plugins alpha de Kustomize (requerido para KSOPS)
 configs:
   cm:
+    # Flags críticos para permitir plugins ejecutables
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
 
 server:
+  ## CONFIGURACIÓN DE INGRESS CON TRAEFIK INGRESSROUTE ##
   ingress:
-    enabled: false  # Desactiva el Ingress de ArgoCD (usa el de Traefik)
+    enabled: false  # Desactivamos el Ingress Controller nativo de ArgoCD
+    
+    # NOTA: Usaremos un IngressRoute personalizado para Traefik con estas características:
+    # - Certificado TLS gestionado por cert-manager
+    # - Middlewares para seguridad adicional
+    # - Configuración optimizada para ArgoCD
+    #
+    # Ejemplo de IngressRoute (a aplicar en un archivo separado):
+    # ---
+    # argocd-ingressroute.yaml
+    # apiVersion: traefik.io/v1alpha1
+    # kind: IngressRoute
+    # metadata:
+    #   name: argocd
+    #   namespace: argocd
+    # spec:
+    #   entryPoints:
+    #     - websecure
+    #   routes:
+    #   - match: Host(`argocd.migbertweb.xyz`)
+    #     kind: Rule
+    #     services:
+    #     - name: argocd-server
+    #       port: 80
+    #   tls:
+    #     secretName: argocd-tls
+    # Ejemplo de certificado TLS con cert-manager:
+    # ---
+    # apiVersion: cert-manager.io/v1
+    # kind: Certificate
+    # metadata:
+    #   name: argocd-tls
+    #   namespace: argocd
+    # spec:
+    #   secretName: argocd-tls  # Nombre del Secret donde se guardará el certificado
+    #   issuerRef:
+    #     name: letsencrypt-production
+    #     kind: ClusterIssuer
+    #   dnsNames:
+    #     - argocd.migbertweb.xyz
+    #   # Asegúrate de que el DNS esté configurado correctamente para apuntar a tu Traefik
+    #   # y que el ClusterIssuer esté configurado para Let's Encrypt.
+
   service:
-    type: ClusterIP
+    type: ClusterIP  # Expone el servicio solo dentro del cluster
+    
+  # Argumentos adicionales para el servidor
   extraArgs:
-    - --insecure  # Desactiva TLS
+    - --insecure  # Desactiva TLS interno (Traefik manejará el TLS externo)
     
 repoServer:
-  # Use init containers to configure custom tooling
-  # https://argoproj.github.io/argo-cd/operator-manual/custom_tools/
+  ## VOLÚMENES ##
   volumes:
+    # Volumen temporal para herramientas personalizadas
     - name: custom-tools
       emptyDir: {}
+    
+    # Secret que contiene la clave Age para descifrado
+    - name: age-key
+      secret:
+        secretName: age-key  # Nombre del Secret previamente creado
+        items:
+          - key: age.agekey  # Key dentro del Secret
+            path: keys.txt   # Se montará como /home/argocd/.config/sops/age/keys.txt
 
+  ## VARIABLES DE ENTORNO ##
+  env:
+    # Ruta al archivo con la clave Age privada (para SOPS)
+    - name: SOPS_AGE_KEY_FILE
+      value: /home/argocd/.config/sops/age/keys.txt
+    
+    # Directorio donde Kustomize buscará plugins
+    - name: KUSTOMIZE_PLUGIN_HOME
+      value: /custom-tools  # Ruta alternativa más confiable que ~/.config
+
+  ## INIT CONTAINERS ##
   initContainers:
+    # Instala KSOPS y Kustomize en el volumen compartido
     - name: install-ksops
-      image: viaductoss/ksops:v4.3.3
+      image: viaductoss/ksops:v4.3.3  # Imagen oficial con las herramientas
       command: ["/bin/sh", "-c"]
       args:
-        - echo "Installing KSOPS...";
-          mv ksops /custom-tools/;
-          mv kustomize /custom-tools/;
+        - |
+          echo "Installing KSOPS...";
+          mv ksops /custom-tools/;  # Mueve el binario ksops
+          mv kustomize /custom-tools/;  # Mueve kustomize
           echo "Done.";
       volumeMounts:
-        - mountPath: /custom-tools
+        - mountPath: /custom-tools  # Monta el volumen temporal
           name: custom-tools
+
+  ## MOUNTS PARA EL CONTENEDOR PRINCIPAL ##
   volumeMounts:
+    # Monta kustomize en /usr/local/bin (estándar para bins)
     - mountPath: /usr/local/bin/kustomize
       name: custom-tools
       subPath: kustomize
+    
+    # Monta ksops en /usr/local/bin
     - mountPath: /usr/local/bin/ksops
       name: custom-tools
       subPath: ksops
+    
+    # Montaje CRÍTICO: Crea la estructura de plugin que Kustomize espera
+    - mountPath: /home/argocd/.config/kustomize/plugin/viaduct.ai/v1/ksops/ksops
+      name: custom-tools
+      subPath: ksops
+    
+    # Monta el secret con la Age key en la ruta que SOPS busca por defecto
+    - mountPath: /home/argocd/.config/sops/age
+      name: age-key
+      readOnly: true  # Solo lectura por seguridad

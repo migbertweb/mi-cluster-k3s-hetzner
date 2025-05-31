@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1 # traefik.containo.us/v1alpha1 depreciated in Traefik v3
+kind: Middleware
+metadata:
+  name: default-headers
+  namespace: argocd
+spec:
+  headers:
+    browserXssFilter: true
+    contentTypeNosniff: true
+    frameDeny: true
+    sslRedirect: true
+    stsIncludeSubdomains: true
+    stsPreload: true
+    stsSeconds: 31536000
+    customFrameOptionsValue: "SAMEORIGIN"
