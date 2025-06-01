@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+  namespace: portafolio
+spec:
+  strategy:
+    type: Recreate  # Necesario para PVCs
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laravel-app
+  template:
+    metadata:
+      labels:
+        app: laravel-app
+    spec:
+      imagePullSecrets:
+        - name: harbor-credentials  # Nombre del Secret creado
+      containers:
+        - name: laravel
+          image: harbor.migbertweb.site/prod-registry/portafolio:1.2.2
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: laravel-code
+              mountPath: /var/www  # Monta el PVC aquí
+          envFrom:
+            - secretRef:
+                name: laravel-secrets
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        - name: laravel-code
+          persistentVolumeClaim:
+            claimName: laravel-code-pvc

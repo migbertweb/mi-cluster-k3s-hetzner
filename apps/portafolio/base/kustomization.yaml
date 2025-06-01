@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - certificate.yaml
+  - pvc-laravel.yaml
+  - cm-laravel.yaml
+  - nginx.yaml
+  - deployment.yaml
+  - nginx-service.yaml
+  - laravel-service.yaml
+  - ingressroute.yaml
+generators:
+  - secrets/ksops-generator.yaml

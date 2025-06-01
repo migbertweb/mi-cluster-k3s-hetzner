@@ -1,0 +1,13 @@
+# pvc-laravel-code.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: laravel-code-pvc
+  namespace: portafolio
+spec:
+  storageClassName: nfs-dynamic
+  accessModes:
+    - ReadWriteMany  # NFS permite múltiples escritores
+  resources:
+    requests:
+      storage: 2Gi  # Ajusta según tus necesidades
