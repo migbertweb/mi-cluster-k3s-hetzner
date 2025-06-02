@@ -4,9 +4,12 @@ resources:
   - namespace.yaml
   - certificate.yaml
   - pvc-laravel.yaml
+  - pvc-redis.yaml
   - cm-laravel.yaml
-  - nginx.yaml
-  - deployment.yaml
+  - redis-deployment.yaml
+  - redis-service.yaml
+  - nginx-deployment.yaml
+  - laravel-deployment.yaml
   - nginx-service.yaml
   - laravel-service.yaml
   - ingressroute.yaml

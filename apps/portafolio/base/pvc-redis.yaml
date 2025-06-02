@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: portafolio  # Asegúrate de que coincida con tu namespace
+spec:
+  storageClassName: local-path  # Usa el provisionador local-path
+  accessModes:
+    - ReadWriteOnce  # Solo una réplica puede montarlo
+  resources:
+    requests:
+      storage: 1Gi  # Ajusta el tamaño según necesites

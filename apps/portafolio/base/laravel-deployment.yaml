@@ -19,7 +19,7 @@ spec:
         - name: harbor-credentials  # Nombre del Secret creado
       containers:
         - name: laravel
-          image: harbor.migbertweb.site/prod-registry/portafolio:1.2.2
+          image: harbor.migbertweb.site/prod-registry/portafolio:1.2.3
           ports:
             - containerPort: 9000
           volumeMounts:
