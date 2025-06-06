@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
-  namespace: portafolio  # Asegúrate de que coincida con tu namespace
+  namespace: redis
 spec:
   replicas: 1
   selector:
@@ -18,6 +18,14 @@ spec:
           image: redis:alpine
           ports:
             - containerPort: 6379
+        # Configura Redis para usar la contraseña del Secret
+          command: ["redis-server", "--requirepass $(REDIS_PASSWORD)"]
+          env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: redis-secret
+                key: REDIS_PASSWORD
           volumeMounts:
             - name: redis-data
               mountPath: /data  # Ruta donde Redis guarda los datos

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: redis-pvc
-  namespace: portafolio  # Asegúrate de que coincida con tu namespace
+  namespace: redis
 spec:
   storageClassName: local-path  # Usa el provisionador local-path
   accessModes:

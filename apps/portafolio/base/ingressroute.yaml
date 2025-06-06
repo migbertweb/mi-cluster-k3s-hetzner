@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`portafolio.migbertweb.xyz`)
+    - match: Host(`migbertweb.xyz`)
       kind: Rule
       services:
         - name: nginx-service

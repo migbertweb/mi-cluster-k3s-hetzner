@@ -4,14 +4,15 @@ resources:
   - namespace.yaml
   - certificate.yaml
   - pvc-laravel.yaml
-  - pvc-redis.yaml
   - cm-laravel.yaml
-  - redis-deployment.yaml
-  - redis-service.yaml
   - nginx-deployment.yaml
   - laravel-deployment.yaml
   - nginx-service.yaml
   - laravel-service.yaml
   - ingressroute.yaml
+  - migrate-job.yaml
 generators:
   - secrets/ksops-generator.yaml
+images:
+  - name: harbor.migbertweb.site/prod-registry/portafolio
+    newTag: 1.3.3

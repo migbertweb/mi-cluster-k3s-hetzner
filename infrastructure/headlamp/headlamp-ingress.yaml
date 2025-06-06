@@ -1,0 +1,19 @@
+apiVersion: traefik.io/v1alpha1 # Para Traefik
+kind: IngressRoute
+metadata:
+  name: headlamp
+  namespace: kube-system
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`headlamp.migbertweb.xyz`)
+      kind: Rule
+      services:
+        - name: my-headlamp
+          port: 80
+  tls:
+    secretName: headlamp-tls

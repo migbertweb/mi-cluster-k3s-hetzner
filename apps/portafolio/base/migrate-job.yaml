@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: laravel-migrate
+  namespace: portafolio
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: harbor-credentials  # Nombre del Secret creado
+      containers:
+      - name: migrator
+        image: harbor.migbertweb.site/prod-registry/portafolio  # ¡Sin tag! (usa el de kustomization.yaml)
+        command: ["sh", "-c", "php artisan migrate --force"]
+        envFrom:
+        - secretRef:
+            name: laravel-secrets
+      restartPolicy: Never
+  ttlSecondsAfterFinished: 3600  # Autoeliminación tras 1 hora
+  backoffLimit: 1
