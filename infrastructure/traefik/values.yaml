@@ -1,4 +1,49 @@
 
+# Entrypoints HTTP y HTTPS
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        enabled: true
+
+# Habilita Let's Encrypt con DNS-01 vía Cloudflare
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: migbert.yanez@gmail.com
+      storage: /data/acme.json
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 0
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
+
+# Monta un volumen para persistencia del certificado
+persistence:
+  enabled: true
+  name: acme-storage
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  path: /data
+  storageClass: local-path  # o el nombre de tu StorageClass
+
+# Expone las variables de entorno desde el Secret de Cloudflare
+env:
+  - name: CLOUDFLARE_DNS_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-dns
+        key: CLOUDFLARE_DNS_API_TOKEN
+
 service:
   enabled: true
   type: LoadBalancer
@@ -13,16 +58,16 @@ service:
       
 ingressRoute:
   dashboard:
-    enabled: false
+    enabled: true
 
 # Recursos
 resources:
   requests:
-    cpu: "300m"
-    memory: "150Mi"
+    cpu: "100m"
+    memory: "64Mi"
   limits:
-    cpu: "500m"
-    memory: "400Mi"
+    cpu: "250m"
+    memory: "200Mi"
 
 rbac:
   enabled: true

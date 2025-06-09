@@ -7,10 +7,10 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`test.migbertweb.xyz`)
+    - match: Host(`proba.migbertweb.xyz`)
       kind: Rule
       services:
         - name: httpd-service
           port: 80
   tls:
-    secretName: httpd-tls
+    certResolver: cloudflare
