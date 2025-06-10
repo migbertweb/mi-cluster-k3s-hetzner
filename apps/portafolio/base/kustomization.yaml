@@ -10,9 +10,8 @@ resources:
   - nginx-service.yaml
   - laravel-service.yaml
   - ingressroute.yaml
-  - migrate-job.yaml
 generators:
   - secrets/ksops-generator.yaml
 images:
   - name: harbor.migbertweb.site/prod-registry/portafolio
-    newTag: 1.3.3
+    newTag: 1.3.2
