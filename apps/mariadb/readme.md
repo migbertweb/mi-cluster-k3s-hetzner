@@ -3,7 +3,7 @@
 **el secret se genera con ksops**
 
 ```bash
-kustomize build kustomize-mariadb/overlays/prod | kubectl apply -f -
+kustomize build mariadb/overlays/prod | kubectl apply -f -
 ```
 
  🌐 Agrega ese puerto (32306) al Load Balancer en Hetzner Cloud
