@@ -3,3 +3,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingressroute.yaml
+images:
+  - name: migbertweb/php-redis-app
+    newTag: 1.0.0

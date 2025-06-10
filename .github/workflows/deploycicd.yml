@@ -34,17 +34,26 @@ jobs:
         tag_prefix: "v"
         default_bump: patch
 
+    - name: Configurar Buildx para multi-arch
+      uses: docker/setup-buildx-action@v3
+
     - name: Login a DockerHub
-      run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
 
-    - name: Build y push de imagen Docker
-      run: |
-        IMAGE=${{ secrets.DOCKER_USERNAME }}/php-redis-app
-        TAG=${{ steps.tag.outputs.new_tag }}
+    - name: Build y push multiplataforma (amd64 + arm64)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/php-redis-app:${{ steps.tag.outputs.new_tag }}
+          ${{ secrets.DOCKER_USERNAME }}/php-redis-app:latest
 
-        docker build -t $IMAGE:$TAG -t $IMAGE:latest .
-        docker push $IMAGE:$TAG
-        docker push $IMAGE:latest
 
     - name: Instalar Kustomize y KSOPS
       run: |
