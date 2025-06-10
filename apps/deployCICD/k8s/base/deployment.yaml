@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-redis-app
+  namespace: deploycicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php-redis-app
+  template:
+    metadata:
+      labels:
+        app: php-redis-app
+    spec:
+      containers:
+        - name: php
+          image: migbertweb/php-redis-app:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"

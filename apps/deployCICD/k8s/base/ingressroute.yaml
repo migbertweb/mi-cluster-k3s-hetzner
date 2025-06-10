@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: php-redis-app-ingressroute
+  namespace: deploycicd
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`phpredis.migbertweb.xyz`)
+      kind: Rule
+      services:
+        - name: php-redis-app
+          port: 80
+  tls:
+    certResolver: cloudflare
