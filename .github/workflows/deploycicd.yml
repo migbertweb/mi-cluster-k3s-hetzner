@@ -29,7 +29,7 @@ jobs:
       id: tag
       uses: mathieudutour/github-tag-action@v6.1
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.GH_PAT }}
         release_branches: master
         tag_prefix: "v"
         default_bump: patch
