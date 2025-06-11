@@ -84,7 +84,8 @@ jobs:
         run: |
           IMAGE=${{ secrets.DOCKER_USERNAME }}/php-redis-app
           TAG=${{ steps.tag.outputs.new_tag }}
-          cd /k8s/overlays/prod  # si está en apps/deployCICD/k8s
+          ls -la
+          cd apps/deployCICD/k8s/overlays/base
           kustomize edit set image $IMAGE=$IMAGE:$TAG
 
       - name: Hacer commit y push del nuevo tag
