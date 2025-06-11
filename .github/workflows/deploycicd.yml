@@ -100,19 +100,21 @@ jobs:
       - name: Lint con kube-linter
         run: |
           curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
-          ./kube-linter lint <(kustomize build .)
+          ./kube-linter lint <(kustomize build apps/deployCICD/k8s/overlays/prod)
 
       - name: Validación con kubeval
         run: |
           curl -LO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar -xzf kubeval-linux-amd64.tar.gz
-          ./kubeval --strict --exit-on-error <(kustomize build .)
+          ./kubeval --strict --exit-on-error <(kustomize build apps/deployCICD/k8s/overlays/prod)
       # revisar
       - name: Aplicar despliegue al clúster
         env:
           KUBECONFIG: ${{ github.workspace }}/apps/deployCICD/kubeconfig.yaml
         run: |
-          kustomize build  apps/deployCICD/k8s/overlays/prod | kubectl apply -f -
+          ls -la
+          echo "Aplicando despliegue al clúster..."
+          kustomize build  ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod | kubectl apply -f -
       ## Mensajes de notificación por Telegram
       # exitoso
       - name: Notificación por Telegram (éxito)
