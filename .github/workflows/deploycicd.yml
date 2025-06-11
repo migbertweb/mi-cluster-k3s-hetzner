@@ -1,5 +1,5 @@
 name: CI/CD Kustomize + KSOPS + Docker + Deploy + Telegram + Linters
-run-name: hecho por ${{ github.actor }} # Aquí se personaliza con el usuario
+
 on:
   push:
     branches:
@@ -96,26 +96,12 @@ jobs:
         run: |
           curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
           ./kube-linter lint <(kustomize build apps/deployCICD/k8s/overlays/prod)
-          echo "🔍 Ejecutando kube-linter..."
-          if ! kube-linter lint ./manifests; then
-            echo "❌ kube-linter encontró problemas"
-            exit 1
-          else
-            echo "✅ kube-linter no encontró problemas"
-          fi
       # Validacion con Kubeval
       - name: Validación con kubeval
         run: |
           curl -LO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar -xzf kubeval-linux-amd64.tar.gz
           ./kubeval --strict --exit-on-error <(kustomize build apps/deployCICD/k8s/overlays/prod)
-          echo "🔍 Ejecutando kubeval..."
-          if ! kubeval ./manifests/*.yaml; then
-            echo "❌ kubeval encontró errores de validación"
-            exit 1
-          else
-            echo "✅ kubeval pasó todas las validaciones"
-          fi
       ###############################
       # Aplicar despliegue al clúster
       - name: Aplicar despliegue al clúster
@@ -140,12 +126,9 @@ jobs:
           START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
-          MINUTES=$((DURATION / 60))
-          SECONDS=$((DURATION % 60))
-          DURATION_FORMATTED="${MINUTES}m ${SECONDS}s"
 
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          CHANGED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }})
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
           FORMATTED_FILES=$(echo "$CHANGED_FILES" | sed '/^$/d' | sed 's/^/• /')
 
           MESSAGE="✅ *Deploy exitoso*
@@ -153,7 +136,7 @@ jobs:
           🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})
           🌿 *Rama:* \`${{ github.ref_name }}\`
           🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-          🕒 *Duración:* \`${DURATION_FORMATTED}\`
+          🕒 *Duración:* \`${DURATION}\`
           🧾 *Archivos modificados:*
           $FORMATTED_FILES"
 
@@ -168,13 +151,10 @@ jobs:
           START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
-          MINUTES=$((DURATION / 60))
-          SECONDS=$((DURATION % 60))
-          DURATION_FORMATTED="${MINUTES}m ${SECONDS}s"
           EXIT_CODE=$?
 
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          CHANGED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }})
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
           FORMATTED_FILES=$(echo "$CHANGED_FILES" | sed '/^$/d' | sed 's/^/• /')
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
@@ -185,7 +165,7 @@ jobs:
           🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})
           🌿 *Rama:* \`${{ github.ref_name }}\`
           🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-          🕒 *Duración:* \`${DURATION_FORMATTED}\`
+          🕒 *Duración:* \`${DURATION}\`
           💥 *Código de error:* \`${EXIT_CODE}\`
 
           🧾 *Archivos modificados:*
