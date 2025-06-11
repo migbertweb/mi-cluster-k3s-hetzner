@@ -108,7 +108,7 @@ jobs:
           curl -LO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar -xzf kubeval-linux-amd64.tar.gz
           ./kubeval --strict --exit-on-error <(kustomize build .)
-
+      # revisar
       - name: Aplicar despliegue al clúster
         env:
           KUBECONFIG: ${{ github.workspace }}/apps/deployCICD/kubeconfig.yaml
