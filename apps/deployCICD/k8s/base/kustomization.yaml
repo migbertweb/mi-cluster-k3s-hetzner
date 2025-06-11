@@ -6,6 +6,6 @@ resources:
 images:
 - name: migbertweb/php-redis-app
   newName: migbertweb/php-redis-app
-  newTag: v1.0.10
+  newTag: v1.0.12
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
