@@ -49,7 +49,7 @@ jobs:
           context: ./apps/deployCICD
           file: ./apps/deployCICD/Dockerfile
           push: true
-          platforms: linux/arm64 # linux/amd64 despues agrego para amd64
+          platforms: linux/arm64, linux/amd64 # despues agrego para amd64
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/php-redis-app:${{ steps.tag.outputs.new_tag }}
             ${{ secrets.DOCKER_USERNAME }}/php-redis-app:latest
@@ -86,12 +86,6 @@ jobs:
           cd k8s/base
           kustomize edit set image $IMAGE=$IMAGE:$TAG
 
-      - name: Hacer commit y push del nuevo tag
-        run: |
-          git add k8s/base/kustomization.yaml
-          git commit -m "chore: update image tag to ${{ steps.tag.outputs.new_tag }}"
-          git push origin master
-
       - name: Configurar Kubeconfig
         run: |
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
@@ -115,6 +109,13 @@ jobs:
           ls -la
           echo "Aplicando despliegue al clúster..."
           kustomize build  ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod | kubectl apply -f -
+
+      # - name: Hacer commit y push del nuevo tag
+      #   run: |
+      #     git add k8s/base/kustomization.yaml
+      #     git commit -m "chore: update image tag to ${{ steps.tag.outputs.new_tag }}"
+      #     git push origin master
+
       ## Mensajes de notificación por Telegram
       # exitoso
       - name: Notificación por Telegram (éxito)
