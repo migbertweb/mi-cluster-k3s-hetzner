@@ -84,11 +84,12 @@ jobs:
         run: |
           IMAGE=${{ secrets.DOCKER_USERNAME }}/php-redis-app
           TAG=${{ steps.tag.outputs.new_tag }}
+          cd /k8s/overlays/prod  # si está en apps/deployCICD/k8s
           kustomize edit set image $IMAGE=$IMAGE:$TAG
 
       - name: Hacer commit y push del nuevo tag
         run: |
-          git add kustomization.yaml
+          git add apps/deployCICD/k8s/overlays/prod/kustomization.yaml
           git commit -m "chore: update image tag to ${{ steps.tag.outputs.new_tag }}"
           git push origin master
 
@@ -112,7 +113,7 @@ jobs:
         env:
           KUBECONFIG: ${{ github.workspace }}/apps/deployCICD/kubeconfig.yaml
         run: |
-          kustomize build . | kubectl apply -f -
+          kustomize build  apps/deployCICD/k8s/overlays/prod | kubectl apply -f -
 
       - name: Notificación por Telegram (éxito)
         if: success()
