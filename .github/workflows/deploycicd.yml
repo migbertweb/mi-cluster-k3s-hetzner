@@ -1,25 +1,26 @@
 name: CI/CD Kustomize + KSOPS + Docker + Deploy + Telegram + Linters
-
+run-name: hecho por ${{ github.actor }} # Aquí se personaliza con el usuario
 on:
   push:
     branches:
       - master
     paths:
       - "apps/deployCICD/**"
-
 jobs:
   deploy:
+    # Evita que el job corra si fue ejecutado por el bot
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/deployCICD
-
+    ###
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GH_PAT }}
-
+      # Configurar Git
       - name: Configurar Git
         run: |
           git config user.name "github-actions"
@@ -33,16 +34,14 @@ jobs:
           release_branches: master
           tag_prefix: "v"
           default_bump: patch
-      # creacion de imagen docker para amd64 y arm64
+      # Creacion de imagen docker para amd64 y arm64
       - name: Configurar Buildx para multi-arch
         uses: docker/setup-buildx-action@v3
-
       - name: Login a DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
-
       - name: Build y push multiplataforma (amd64 + arm64)
         uses: docker/build-push-action@v5
         with:
@@ -53,7 +52,8 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/php-redis-app:${{ steps.tag.outputs.new_tag }}
             ${{ secrets.DOCKER_USERNAME }}/php-redis-app:latest
-      # instalacion de herramientas necesarias
+      ###############################################
+      # Instalacion de herramientas necesarias para K8s
       - name: Instalar Kustomize y KSOPS
         run: |
           curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
@@ -63,7 +63,7 @@ jobs:
           curl -Lo ksops https://github.com/viaduct-ai/kustomize-sops/releases/latest/download/ksops-linux-amd64
           chmod +x ksops
           mv ksops ~/.config/kustomize/plugin/viaduct.ai/v1/ksops/ksops
-
+      # Instalar Age y SOPS
       - name: Instalar Age y SOPS
         run: |
           curl -L https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz | tar xz
@@ -72,7 +72,7 @@ jobs:
 
           curl -L https://github.com/mozilla/sops/releases/download/v3.8.1/sops-v3.8.1.linux -o /usr/local/bin/sops
           chmod +x /usr/local/bin/sops
-
+      # Configurar clave privada de Age
       - name: Configurar clave privada de Age
         run: |
           mkdir -p ~/.config/sops/age
@@ -85,23 +85,39 @@ jobs:
           ls -la
           cd k8s/base
           kustomize edit set image $IMAGE=$IMAGE:$TAG
-
+      # Configurar Kubeconfig
       - name: Configurar Kubeconfig
         run: |
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
-
+      ###############################
+      # Linting con Kube-linter
       - name: Lint con kube-linter
         run: |
           curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
           ./kube-linter lint <(kustomize build apps/deployCICD/k8s/overlays/prod)
-
+          echo "🔍 Ejecutando kube-linter..."
+          if ! kube-linter lint ./manifests; then
+            echo "❌ kube-linter encontró problemas"
+            exit 1
+          else
+            echo "✅ kube-linter no encontró problemas"
+          fi
+      # Validacion con Kubeval
       - name: Validación con kubeval
         run: |
           curl -LO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar -xzf kubeval-linux-amd64.tar.gz
           ./kubeval --strict --exit-on-error <(kustomize build apps/deployCICD/k8s/overlays/prod)
-      # revisar
+          echo "🔍 Ejecutando kubeval..."
+          if ! kubeval ./manifests/*.yaml; then
+            echo "❌ kubeval encontró errores de validación"
+            exit 1
+          else
+            echo "✅ kubeval pasó todas las validaciones"
+          fi
+      ###############################
+      # Aplicar despliegue al clúster
       - name: Aplicar despliegue al clúster
         env:
           KUBECONFIG: ${{ github.workspace }}/apps/deployCICD/kubeconfig.yaml
@@ -110,12 +126,12 @@ jobs:
           echo "Aplicando despliegue al clúster..."
           kustomize build  ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod | kubectl apply -f -
 
-      # - name: Hacer commit y push del nuevo tag
-      #   run: |
-      #     git add k8s/base/kustomization.yaml
-      #     git commit -m "chore: update image tag to ${{ steps.tag.outputs.new_tag }}"
-      #     git push origin master
-
+      - name: Hacer commit y push del nuevo tag
+        run: |
+          git add k8s/base/kustomization.yaml
+          git commit -m "CICD: Updated image to ${{ steps.tag.outputs.new_tag }} [skip ci]"
+          git push origin master
+      ###############################
       ## Mensajes de notificación por Telegram
       # exitoso
       - name: Notificación por Telegram (éxito)
@@ -124,18 +140,22 @@ jobs:
           START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
+          MINUTES=$((DURATION / 60))
+          SECONDS=$((DURATION % 60))
+          DURATION_FORMATTED="${MINUTES}m ${SECONDS}s"
 
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
+          CHANGED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }})
           FORMATTED_FILES=$(echo "$CHANGED_FILES" | sed '/^$/d' | sed 's/^/• /')
 
-          MESSAGE="✅ *Deploy exitoso*\n\n
-          📦 *Versión:* \`${{ steps.tag.outputs.new_tag }}\`\n
-          🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})\n
-          🌿 *Rama:* \`${{ github.ref_name }}\`\n
-          🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})\n
-          🕒 *Duración:* \`${DURATION}s\`\n\n
-          🧾 *Archivos modificados:*\n$FORMATTED_FILES"
+          MESSAGE="✅ *Deploy exitoso*
+          📦 *Versión:* \`${{ steps.tag.outputs.new_tag }}\`
+          🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})
+          🌿 *Rama:* \`${{ github.ref_name }}\`
+          🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+          🕒 *Duración:* \`${DURATION_FORMATTED}\`
+          🧾 *Archivos modificados:*
+          $FORMATTED_FILES"
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
@@ -148,10 +168,13 @@ jobs:
           START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
+          MINUTES=$((DURATION / 60))
+          SECONDS=$((DURATION % 60))
+          DURATION_FORMATTED="${MINUTES}m ${SECONDS}s"
           EXIT_CODE=$?
 
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
+          CHANGED_FILES=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }})
           FORMATTED_FILES=$(echo "$CHANGED_FILES" | sed '/^$/d' | sed 's/^/• /')
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
@@ -162,7 +185,7 @@ jobs:
           🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})
           🌿 *Rama:* \`${{ github.ref_name }}\`
           🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-          🕒 *Duración:* \`${DURATION}s\`
+          🕒 *Duración:* \`${DURATION_FORMATTED}\`
           💥 *Código de error:* \`${EXIT_CODE}\`
 
           🧾 *Archivos modificados:*
