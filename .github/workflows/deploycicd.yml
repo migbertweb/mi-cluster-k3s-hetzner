@@ -115,7 +115,8 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/apps/deployCICD/kubeconfig.yaml
         run: |
           kustomize build  apps/deployCICD/k8s/overlays/prod | kubectl apply -f -
-
+      ## Mensajes de notificación por Telegram
+      # exitoso
       - name: Notificación por Telegram (éxito)
         if: success()
         run: |
@@ -123,6 +124,7 @@ jobs:
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
 
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
           FORMATTED_FILES=$(echo "$CHANGED_FILES" | sed '/^$/d' | sed 's/^/• /')
 
@@ -130,7 +132,7 @@ jobs:
           📦 *Versión:* \`${{ steps.tag.outputs.new_tag }}\`\n
           🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})\n
           🌿 *Rama:* \`${{ github.ref_name }}\`\n
-          🔁 *Commit:* [\`${{ github.sha::7 }}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})\n
+          🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})\n
           🕒 *Duración:* \`${DURATION}s\`\n\n
           🧾 *Archivos modificados:*\n$FORMATTED_FILES"
 
@@ -138,7 +140,7 @@ jobs:
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
             -d parse_mode="Markdown" \
             -d text="$MESSAGE"
-
+      # fallo
       - name: Notificación por Telegram (fallo)
         if: failure()
         run: |
@@ -147,6 +149,7 @@ jobs:
           DURATION=$((END_TIME - START_TIME))
           EXIT_CODE=$?
 
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
           FORMATTED_FILES=$(echo "$CHANGED_FILES" | sed '/^$/d' | sed 's/^/• /')
 
@@ -157,7 +160,7 @@ jobs:
 
           🚀 *Proyecto:* [${{ github.repository }}](https://github.com/${{ github.repository }})
           🌿 *Rama:* \`${{ github.ref_name }}\`
-          🔁 *Commit:* [\`${{ github.sha::7 }}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+          🔁 *Commit:* [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           🕒 *Duración:* \`${DURATION}s\`
           💥 *Código de error:* \`${EXIT_CODE}\`
 
