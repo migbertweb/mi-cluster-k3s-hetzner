@@ -126,6 +126,19 @@ jobs:
           START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
+          MINUTES=$((DURATION / 60))
+          if [ $MINUTES -gt 0 ]; then
+            DURATION="${MINUTES} minutos"
+          else
+            DURATION="${DURATION} segundos"
+          fi
+          SEGUNDOS=$((DURATION % 60))
+          if [ $MINUTES -gt 0 ]; then
+            DURATION="${MINUTES} minutos y ${SEGUNDOS} segundos"
+          else
+            DURATION="${SEGUNDOS} segundos"
+          fi
+          # Formatear el tiempo de duración
 
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})
@@ -151,6 +164,19 @@ jobs:
           START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
+          MINUTES=$((DURATION / 60))
+          if [ $MINUTES -gt 0 ]; then
+            DURATION="${MINUTES} minutos"
+          else
+            DURATION="${DURATION} segundos"
+          fi
+          SEGUNDOS=$((DURATION % 60))
+          if [ $MINUTES -gt 0 ]; then
+            DURATION="${MINUTES} minutos y ${SEGUNDOS} segundos"
+          else
+            DURATION="${SEGUNDOS} segundos"
+          fi
+          # Formatear el tiempo de duración
           EXIT_CODE=$?
 
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
