@@ -127,11 +127,6 @@ jobs:
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
           MINUTES=$((DURATION / 60))
-          if [ $MINUTES -gt 0 ]; then
-            DURATION="${MINUTES} minutos"
-          else
-            DURATION="${DURATION} segundos"
-          fi
           SEGUNDOS=$((DURATION % 60))
           if [ $MINUTES -gt 0 ]; then
             DURATION="${MINUTES} minutos y ${SEGUNDOS} segundos"
@@ -165,11 +160,6 @@ jobs:
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
           MINUTES=$((DURATION / 60))
-          if [ $MINUTES -gt 0 ]; then
-            DURATION="${MINUTES} minutos"
-          else
-            DURATION="${DURATION} segundos"
-          fi
           SEGUNDOS=$((DURATION % 60))
           if [ $MINUTES -gt 0 ]; then
             DURATION="${MINUTES} minutos y ${SEGUNDOS} segundos"
