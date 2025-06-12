@@ -10,7 +10,5 @@ echo "<p>La fecha y hora actual es: " . date('Y-m-d H:i:s') . "</p>";
 echo "<p>El nombre del host es: " . gethostname() . "</p>";
 echo "<p>El nombre del contenedor es: " . getenv('HOSTNAME') . "</p>";
 echo "<p>El nombre del pod es: " . getenv('POD_NAME') . "</p>";
-echo "<p>El nombre del servicio es: " . getenv('SERVICE_NAME') . "</p>";
-echo "<p>El nombre del namespace es: " . getenv('NAMESPACE') . "</p>";
 
 echo "<p>Visitas: $visits</p>";
