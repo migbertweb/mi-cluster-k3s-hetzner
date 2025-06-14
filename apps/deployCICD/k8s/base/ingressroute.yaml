@@ -19,3 +19,4 @@ spec:
           namespace: traefik-middlewares
   tls:
     certResolver: cloudflare
+# cambio1
