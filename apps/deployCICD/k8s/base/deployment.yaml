@@ -1,10 +1,11 @@
-apiVersion: apps/v1
+apiVersion: apps/v9
 kind: Deployment
 metadata:
   name: php-redis-app
   namespace: deploycicd
 spec:
   replicas: 1
+  thisIsInvalidField: true  # ← Esto rompe kubeconform
   selector:
     matchLabels:
       app: php-redis-app

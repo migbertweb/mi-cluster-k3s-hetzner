@@ -25,6 +25,43 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
+      ###############################
+      # Linting con Kube-linter
+      - name: Linting con kube-linter
+        run: |
+          set -euo pipefail
+
+          # Descargar y extraer kube-linter
+          curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
+
+          echo "🔍 Ejecutando kube-linter sobre los manifiestos de Kustomize..."
+
+          # Ejecutar kube-linter y capturar errores
+          if ! ./kube-linter lint <(kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod); then
+            echo "❌ KubeLinter encontró errores. Por favor corrige antes de continuar."
+            exit 1
+          else
+            echo "✅ KubeLinter: sin errores."
+          fi
+      # Validación con Kubeconform (reemplazo moderno de kubeval)
+      - name: Validación de manifiestos con kubeconform
+        run: |
+          set -euo pipefail
+
+          echo "📥 Descargando kubeconform..."
+          curl -L -o kubeconform https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64
+          chmod +x kubeconform
+
+          echo "🔍 Ejecutando kubeconform sobre los manifiestos generados por Kustomize..."
+
+          if ! ./kubeconform -strict -summary -kubernetes-version 1.27 <(kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod); then
+            echo "❌ kubeconform detectó errores de validación en los manifiestos. Corrígelos antes de hacer deploy."
+            exit 1
+          else
+            echo "✅ kubeconform: todos los manifiestos son válidos y cumplen con los esquemas de Kubernetes."
+          fi
+      #############################
       # Generacion de nuevo tag semántico
       - name: Generar nuevo tag semántico
         id: tag
@@ -90,30 +127,7 @@ jobs:
         run: |
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
-      ###############################
-      # Linting con Kube-linter
-      - name: Lint con kube-linter
-        run: |
-          set -euo pipefail
 
-          # Descargar y extraer kube-linter
-          curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
-
-          echo "🔍 Ejecutando kube-linter sobre los manifiestos de Kustomize..."
-
-          # Ejecutar kube-linter y capturar errores
-          if ! ./kube-linter lint <(kustomize build apps/deployCICD/k8s/overlays/prod); then
-            echo "❌ KubeLinter encontró errores. Por favor corrige antes de continuar."
-            exit 1
-          else
-            echo "✅ KubeLinter: sin errores."
-          fi
-      # Validación con Kubeval
-      - name: Validación con kubeval
-        run: |
-          curl -LO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-          tar -xzf kubeval-linux-amd64.tar.gz
-          ./kubeval --strict --exit-on-error <(kustomize build apps/deployCICD/k8s/overlays/prod)
       ###############################
       # Aplicar despliegue al clúster
       - name: Aplicar despliegue al clúster
