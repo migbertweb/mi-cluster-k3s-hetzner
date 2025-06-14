@@ -4,7 +4,7 @@ metadata:
   name: php-redis-app
   namespace: deploycicd
 spec:
-  replicasSELee: 1
+  replicas: 1
   selector:
     matchLabels:
       app: php-redis-app
@@ -22,6 +22,12 @@ spec:
             readOnlyRootFilesystem: true
           ports:
             - containerPort: 80
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
           resources:
             requests:
               memory: "64Mi"
