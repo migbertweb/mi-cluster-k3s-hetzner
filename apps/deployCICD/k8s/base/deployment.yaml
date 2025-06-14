@@ -5,7 +5,7 @@ metadata:
   namespace: deploycicd
 spec:
   replicas: 1
-  thisIsInvalidField: true  # ← Esto rompe kubeconform
+  thisIsInvalidField: true  # ← Esto rompe kubeconform verificamosle
   selector:
     matchLabels:
       app: php-redis-app
