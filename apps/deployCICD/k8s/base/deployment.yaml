@@ -17,10 +17,10 @@ spec:
       containers:
         - name: php
           image: migbertweb/php-redis-app
-          # securityContext:
-          # runAsNonRoot: true
-          # runAsUser: 1000
-          # readOnlyRootFilesystem: true
+          securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
           ports:
             - containerPort: 80
           resources:

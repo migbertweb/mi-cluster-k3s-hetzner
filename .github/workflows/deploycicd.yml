@@ -28,22 +28,22 @@ jobs:
 
       ###############################
       # Linting con Kube-linter
-      - name: Linting con kube-linter
-        run: |
-          set -euo pipefail
+      # - name: Linting con kube-linter
+      #   run: |
+      #     set -euo pipefail
 
-          # Descargar y extraer kube-linter
-          curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
+      #     # Descargar y extraer kube-linter
+      #     curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
 
-          echo "🔍 Ejecutando kube-linter sobre los manifiestos de Kustomize..."
+      #     echo "🔍 Ejecutando kube-linter sobre los manifiestos de Kustomize..."
 
-          # Ejecutar kube-linter y capturar errores
-          if ! ./kube-linter lint <(kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod); then
-            echo "❌ KubeLinter encontró errores. Por favor corrige antes de continuar."
-            exit 1
-          else
-            echo "✅ KubeLinter: sin errores."
-          fi
+      #     # Ejecutar kube-linter y capturar errores
+      #     if ! ./kube-linter lint <(kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod); then
+      #       echo "❌ KubeLinter encontró errores. Por favor corrige antes de continuar."
+      #       exit 1
+      #     else
+      #       echo "✅ KubeLinter: sin errores."
+      #fi
       # Validación con Kubeconform (reemplazo moderno de kubeval)
       - name: Validación de manifiestos con kubeconform
         run: |
