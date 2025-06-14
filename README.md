@@ -1,22 +1,23 @@
 <!--toc:start-->
 
-# MI CLUSTER K3S CON TERRAFORM
+# MI CLUSTER K3S CON TERRAFORM EN HETZNER
 
 > y las siguintes herramientas:
 
 * Hetzner Cloud Controller
-* Nginx Ingress Controller
+* Traefik Ingress Controller
 * StorageClass NFS-subdir-external-provisioner
-* Cert-Manager
-* Monitoring con Prometheus y Grafana ... Futuramente Loki*
+* Metrics Server
 
 ## PASOS PARA DESPLEGAR CLUSTER EN HETZNER
 
+> Directorio: infrastructure/terraform-install/
+
 ### En el main.tf file
 
-You can view the latest version of hetznercloud/hcloud in the Terraform Registry.
+Buscar la ultima version de hetznercloud/hcloud en el Terraform Registry y modificar en el main.tf
 
-#### En el .tfvars: Replace <your_api_token> with your actual Hetzner Cloud API token
+#### En el .tfvars: Remplaza <su_api_token_de_hetzner> con la actual Hetzner Cloud API token
 
 hcloud_token = \"your_api_token\"
 
@@ -73,7 +74,7 @@ kubectl get pods -A
 
 #### instalar Hetzner Cloud Controller
 
->en la carpeta de Hcloud
+> en la carpeta de Hcloud-secret
 > primero edite el network en el archivo cifrado coloque alli el network-id que guardo luego de instalar con terraform
 
 ```bash
@@ -94,7 +95,53 @@ kubectl -n kube-system apply -f https://github.com/hetznercloud/hcloud-cloud-con
 
 ***
 
-### Instalar Nginx Ingress Controller
+### Instalar Traefik Ingres Controller (si desea utilizar Nginx Ingress salte este paso y siga al siguente)
+
+> en la carpeta Traefik-ingress-controller
+
+yo utilizo Cloudflare para la generacion de certificados y necesitas crear y añadir el token
+en el secret para que traefik lo utilice para el challenger DNS-01
+
+```bash
+kubectl apply -f traefik-secret.yaml
+```
+
+>(el secret encryptado es mio :-)
+>verifique y edite el values.yaml a sus requerimientos (recuenden que esta adaptado para mi infraestructura)
+
+#### Añadir el repositorio de Helm de Traefik
+
+```bash
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+```
+
+#### Instalar Traefik
+
+```bash
+helm upgrade --install traefik traefik/traefik \
+  --namespace traefik \
+  -f values.yaml
+```
+
+**NOTA IMPORTANTE: Editar el value y modificar el dominio, debe ser un registro DNS válido que apunte a la dirección IP pública de Load Balancers’.**
+
+El controlador debería haber creado un Loadbalancer y
+haber conectado todos los nodos (podría tomar un minuto).
+
+![status del loadbalancer](https://blog.kay.sh/content/images/2022/11/Screenshot-2022-11-28-at-12.38.27.png)
+>
+
+Ahora verifique si sus nodos tienen el ID de proveedor correcto:
+
+```bash
+kubectl describe node master-node | grep "ProviderID"
+kubectl describe node worker-node-0 | grep "ProviderID"
+```
+
+***
+
+### Instalar Nginx Ingress Controller (Para quien desee utilizar NIC y no traefik)
 
 >en la carpeta: nginx-ingress-controller
 
@@ -120,7 +167,7 @@ haber conectado todos los nodos (podría tomar un minuto).
 ![status del loadbalancer](https://blog.kay.sh/content/images/2022/11/Screenshot-2022-11-28-at-12.38.27.png)
 >
 
-Now check if your nodes have the correct provider ID:
+Ahora verifique si sus nodos tienen el ID de proveedor correcto:
 
 ```bash
 kubectl describe node master-node | grep "ProviderID"
@@ -132,8 +179,9 @@ kubectl describe node worker-node-0 | grep "ProviderID"
 #### INSTALAR EL STORAGECLASS NFS-SUBDIR-EXTERNAL-PROVISIONER
 
 **Estara disponible para utilizar en los pvc con el storageclass:nfs-dynamic**
+**solo si añadio el storage**
 
-#### En la carpeta infrastructure/storage
+#### En la carpeta infrastructure/storage-nfs-provisoring
 
 ```bash
 helm install nfs-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
@@ -155,6 +203,8 @@ terraform destroy -var-file .tfvars
 ```
 
 ***
+
+### ESTOS PASOS SON OPCIONALES, INCLUSO SE PUEDEN UTILIZAR CON TRAEFIK O NGINX
 
 ### INSTALAR CERT-MANAGER Y VERIFICAR CREANDO CERTIFICADOS STAGING Y DE PRODUCCION
 
@@ -222,7 +272,26 @@ kubectl apply -f test-httpd-deploy.yaml
 
 ***
 
-### DEPLOY DEL SISTEMA MONITORING (PROMETHEUS Y GRAFANA ... FUTURAMENTE LOKI)
+### DEPLOY DE METRICS-SERVER PARA MONITOREO DEL CLUSTER
+
+>en la carpeta:infrastructure/metrics-server
+
+#### AÑADIR EL REPO A HELM
+
+```bash
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+helm repo update
+```
+
+##### Instalar Metrics-server
+
+```bash
+helm upgrade --install metrics-server metrics-server/metrics-server \
+  --namespace kube-system \
+  -f values.yaml
+```
+
+### DEPLOY DEL SISTEMA MONITORING AVANZADO (PROMETHEUS Y GRAFANA ... FUTURAMENTE LOKI)
 
 >en la carpeta monitoring
 
