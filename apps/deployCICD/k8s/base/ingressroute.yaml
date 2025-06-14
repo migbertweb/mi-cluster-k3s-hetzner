@@ -12,11 +12,6 @@ spec:
       services:
         - name: php-redis-app
           port: 80
-      middlewares:
-        - name: default-headers
-          namespace: traefik-middlewares
-        - name: rate-limit
-          namespace: traefik-middlewares
   tls:
     certResolver: cloudflare
 # cambio1
