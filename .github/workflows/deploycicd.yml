@@ -50,12 +50,11 @@ jobs:
           set -euo pipefail
 
           echo "📥 Descargando kubeconform..."
-          curl -L -o kubeconform https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64
-          chmod +x kubeconform
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64 | tar xz
 
           echo "🔍 Ejecutando kubeconform sobre los manifiestos generados por Kustomize..."
 
-          if ! ./kubeconform -strict -summary -kubernetes-version 1.27 <(kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod); then
+          if ! ./kubeconform -strict -summary -kubernetes-version 1.32.4 <(kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod); then
             echo "❌ kubeconform detectó errores de validación en los manifiestos. Corrígelos antes de hacer deploy."
             exit 1
           else
