@@ -31,6 +31,7 @@ jobs:
       - name: Detectar cambios en carpeta app/
         id: check_app
         run: |
+          git fetch --depth=2 origin ${{ github.ref }}
           if git diff --quiet HEAD^ HEAD -- ${{ github.workspace }}/apps/deployCICD/app; then
             echo "Sin cambios en carpeta app/"
             echo "app_changed=false" >> $GITHUB_OUTPUT
