@@ -94,9 +94,21 @@ jobs:
       # Linting con Kube-linter
       - name: Lint con kube-linter
         run: |
+          set -euo pipefail
+
+          # Descargar y extraer kube-linter
           curl -sSL https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz | tar xz
-          ./kube-linter lint <(kustomize build apps/deployCICD/k8s/overlays/prod)
-      # Validacion con Kubeval
+
+          echo "🔍 Ejecutando kube-linter sobre los manifiestos de Kustomize..."
+
+          # Ejecutar kube-linter y capturar errores
+          if ! ./kube-linter lint <(kustomize build apps/deployCICD/k8s/overlays/prod); then
+            echo "❌ KubeLinter encontró errores. Por favor corrige antes de continuar."
+            exit 1
+          else
+            echo "✅ KubeLinter: sin errores."
+          fi
+      # Validación con Kubeval
       - name: Validación con kubeval
         run: |
           curl -LO https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
