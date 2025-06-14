@@ -4,7 +4,7 @@ metadata:
   name: php-redis-app
   namespace: deploycicd
 spec:
-  replicasSEL: 1
+  replicasSELee: 1
   selector:
     matchLabels:
       app: php-redis-app

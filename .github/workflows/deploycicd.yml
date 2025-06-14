@@ -54,7 +54,7 @@ jobs:
 
           echo "🔍 Ejecutando kubeconform sobre los manifiestos generados por Kustomize..."
 
-          if ! kustomize build apps/deployCICD/k8s/overlays/prod | ./kubeconform -strict -summary -kubernetes-version 1.32.4 -skip "IngressRoute"; then
+          if ! kustomize build ${{ github.workspace }}/apps/deployCICD/k8s/overlays/prod | ./kubeconform -strict -summary -kubernetes-version 1.32.4 -skip "IngressRoute"; then
             echo "❌ kubeconform detectó errores de validación en los manifiestos. Corrígelos antes de hacer deploy."
             exit 1
           else
