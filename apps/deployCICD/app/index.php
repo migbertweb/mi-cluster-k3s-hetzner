@@ -10,10 +10,10 @@ if ($redisPassword === false) {
 
 $redis->auth($redisPassword);
 
-// Verificar si se presionó el botón de reinicio
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset'])) {
-    $redis->set('visits', 0);
-}
+// // Verificar si se presionó el botón de reinicio
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset'])) {
+//     $redis->set('visits', 0);
+// }
 
 // Incrementar visitas
 $visits = $redis->incr('visits');
