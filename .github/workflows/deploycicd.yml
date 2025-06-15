@@ -159,6 +159,16 @@ jobs:
       ######################################
       ## seccion con mi action
       ######################################
+      - name: Calcular duración del deploy
+        id: deploy_duration
+        run: |
+          START_TIME=$(date -d "${{ github.event.head_commit.timestamp }}" +%s)
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "Duración: $DURATION segundos"
+          echo "time_in_seconds=$DURATION" >> $GITHUB_OUTPUT
+      ######################################
+      # Enviar estado del clúster a Telegram
       - name: Enviar estado del clúster por Telegram
         uses: migbertweb/ghaction-k8s-status-to-telegram@v1
         with:
@@ -168,6 +178,8 @@ jobs:
           namespace: deploycicd
           delay: 20
           tag: ${{ steps.tag.outputs.new_tag }}
+          job_status: ${{ job.status }}
+          deploy_duration: ${{ steps.deploy_duration.outputs.time_in_seconds }}
       ######################################
       - name: Hacer commit y push del nuevo tag
         if: steps.check_app.outputs.app_changed == 'true'
