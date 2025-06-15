@@ -22,11 +22,11 @@ $visits = $redis->incr('visits');
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PHP en Kubernetes</title>
+    <title>PHP en K8S</title>
 </head>
 <body>
     <h1>Hola desde PHP en Kubernetes</h1>
-    <p>Esta es una aplicación PHP desplegada en un clúster de Kubernetes.</p>
+    <p>Esta es una aplicación PHP desplegada en un clúster de Kubernetes para hacer test de Redis.</p>
     <p>La fecha y hora actual es: <?= date('Y-m-d H:i:s') ?></p>
     <p>El nombre del host es: <?= gethostname() ?></p>
     <p>El nombre del contenedor es: <?= getenv('HOSTNAME') ?></p>
@@ -35,5 +35,6 @@ $visits = $redis->incr('visits');
     <form method="POST">
         <button type="submit" name="reset">Reiniciar contador</button>
     </form>
+    <p>Al final del push y el deploy se corre un flujo de CI/CD que incluye pruebas y despliegue automático, ademas se envian notificaciones a Telegram.</p>
 </body>
 </html>
