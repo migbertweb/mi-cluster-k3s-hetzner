@@ -165,8 +165,8 @@ jobs:
           telegram_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           telegram_chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
           kubeconfig: ${{ github.workspace }}/apps/deployCICD/kubeconfig.yaml
-          namespace: default
-          delay: 15
+          namespace: deploycicd
+          delay: 20
           tag: ${{ steps.tag.outputs.new_tag }}
       ######################################
       - name: Hacer commit y push del nuevo tag
