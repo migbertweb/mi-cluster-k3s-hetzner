@@ -170,7 +170,7 @@ jobs:
       ######################################
       # Enviar estado del clúster a Telegram
       - name: Enviar estado del clúster por Telegram
-        uses: migbertweb/ghaction-k8s-status-to-telegram@v1
+        uses: migbertweb/ghaction-k8s-status-to-telegram@v2
         with:
           telegram_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           telegram_chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
